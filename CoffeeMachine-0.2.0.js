@@ -17,7 +17,6 @@ const recipes = {
 }
 
 
-
 class CoffeeMachine {
   constructor() {
     this._water = 0;
@@ -26,7 +25,9 @@ class CoffeeMachine {
     this._recipeType = 'undefined';
     this._garbage = 0;
     this._status = 'free';
-    this._waiter = [];
+    this._cookingTime = 2000;
+    this._callCounter = 0;
+    this._cookingPause = 2000;
   }
 
   setAmount(type, value) {
@@ -38,7 +39,7 @@ class CoffeeMachine {
   }
 
   _cook(recipe) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this._water = this._water - recipes[recipe].water
       this._milk = this._milk - recipes[recipe].milk
       this._corn = this._corn - recipes[recipe].corn
@@ -48,11 +49,11 @@ class CoffeeMachine {
       Осталось молока: ${this._milk}
       Осталось зерна: ${this._corn}
       `;
-
       setTimeout(() => {
+  
         resolve(report);
-      }, 2000);
 
+      }, this._cookingTime);
     })
   }
 
@@ -76,29 +77,32 @@ class CoffeeMachine {
 
 
   start(recipe) {
-    let waitingQueue = new Map();
-    this._status = 'free';
-    if (this._systemCheck) {
-      waitingQueue.set(this._getRndInteger(0, 5), recipe)
-      waitingQueue.forEach(item => {
-        if (this._status == 'free') {
-          this._status = 'busy';
-          this._cook(item)
-            .then((result) => {
-              console.log(`Начинаем готовить ваш кофе - ${recipe}`)
-              return result
-            })
-            .then(result => {
-              console.log(result)
-              return new Promise(resolve => {
-                setTimeout(() => {
-                  resolve();
-                }, 5000)
-              })
-            })
-            .then((data) => this._status = 'free')
-        }
+
+     const cookingManager = async (item) => {
+      this._status = 'busy'; 
+      console.log(`Начинаем готовить ваш кофе - ${recipe}`)
+      this._cook(item)
+      .then(result => {
+        console.log(result)
+        this._status = 'free';
       })
+    }
+
+    if (this._systemCheck) {
+      async function processQueue(recipe) {      
+        if (this._status == 'free') {
+          this._callCounter++
+          await cookingManager(recipe);
+        }
+        else {
+          this._callCounter++
+          let callTimer = this._cookingTime * this._callCounter + this._cookingPause * this._callCounter;
+          setTimeout(async () =>{
+            await cookingManager(recipe);      
+          },  this._cookingTime * this._callCounter + this._cookingPause * this._callCounter)
+        }
+    }
+      processQueue.call(this,recipe)
     }
   }
 
