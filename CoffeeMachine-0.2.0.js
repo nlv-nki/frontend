@@ -64,12 +64,12 @@ class CoffeeMachine {
     if (this._water < recipes[recipe].water)
       console.log(`Не достаточно воды - набираем...`);
     if (this._milk < recipes[recipe].milk || this._corn < recipes[recipe].corn) {
-      throw new Error("Не достаточно ингредиентов");
       systemCheckFlag = false;
+      throw new Error("Не достаточно ингредиентов");
     }
     if (this._garbage > 7) {
-      throw new Error(`Емкости для мусора и отработанной воды заполенны. Заполненность: ${this._garbage}. Максимум: 3`);
       systemCheckFlag = false;
+      throw new Error(`Емкости для мусора и отработанной воды заполенны. Заполненность: ${this._garbage}. Максимум: 3`);
     }
     return systemCheckFlag;
 
@@ -99,7 +99,7 @@ class CoffeeMachine {
           let callTimer = this._cookingTime * this._callCounter + this._cookingPause * this._callCounter;
           setTimeout(async () =>{
             await cookingManager(recipe);      
-          },  this._cookingTime * this._callCounter + this._cookingPause * this._callCounter)
+          }, callTimer)
         }
     }
       processQueue.call(this,recipe)
